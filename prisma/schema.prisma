@@ -1,0 +1,820 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+model Notification {  
+  id        Int     @id @default(autoincrement())
+  userId    Int     // Reference to the user who receives the notification (non-nullable)  
+  type      String   // Type of notification (e.g., 'game_invite', 'level_up', etc.)  
+  content   String?   // The actual notification message/content  
+  isRead    Boolean  @default(false) // To mark if the notification has been read  
+  createdAt DateTime @default(now()) // Timestamp of when it was created  
+  updatedAt DateTime @updatedAt       // Timestamp of last update  
+  
+  user      Users?    @relation(fields: [userId], references: [id]) // Relation to user model  
+  @@map("tbl_notifications")
+}
+model Users {
+  id                         Int     @id @default(autoincrement())
+  id_user                    Int?
+  guild_reference            BigInt?
+  guild_reference_affiliated BigInt?
+
+  password     String  @db.VarChar(255)
+  username     String  @unique @db.VarChar(255)
+  email        String? @db.VarChar(255)
+  avatar       String? @db.VarChar(255)
+  access_token String?
+  role         Roles
+  status       Status  @default(ACTIVE)
+
+  seed              String?
+  integration_token String?
+  onetime_token     String?
+  app_secret        String?
+  twofactor_active  Boolean @default(false)
+  twofactor_code    String?
+  access_allowed    Boolean @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  UserConfigurations UserConfigurations[]
+  Permissions        Permissions[]
+  Peoples            Peoples?
+  Accounts           Accounts[]
+  SecurityCodes      SecurityCodes[]
+  UserHasGuns        UserHasGuns[]
+  UserHasMiscs       UserHasMiscs[]
+  PlayerResearches   PlayerResearches[]
+  Planets            Planets[]
+  Notification Notification[]
+
+  ChildOf    Users?  @relation("parent_user", fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  ParentUser Users[] @relation("parent_user")
+
+  GuildOwner      Guilds?
+  GuildAffiliated Guilds? @relation("user_affiliated", fields: [guild_reference_affiliated], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_users")
+}
+
+model UserConfigurations {
+  id       Int  @id @default(autoincrement())
+  id_user  Int
+  id_point Int?
+
+  jump_delay            Int?
+  respawn_delay         Int?
+  reputation_change     Int?
+  affiliation_change    Int?
+  money_multiplier      Decimal @default(0.00) @db.Decimal(18, 8)
+  damage_multiplier     Decimal @default(0.00) @db.Decimal(18, 8)
+  resistance_multiplier Decimal @default(0.00) @db.Decimal(18, 8)
+  experience            Int     @default(0)
+  equiped_ship_id       Int?
+  equiped_skin_id       Int?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Users  Users   @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  Points Points? @relation(fields: [id_point], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  Maps   Maps?   @relation(fields: [mapsId], references: [id])
+  mapsId Int?
+
+  @@map("tbl_user_configurations")
+}
+
+model UserHasGuns {
+  gun_reference BigInt
+  id_user       Int
+
+  created_at DateTime @default(now())
+
+  Guns  Guns  @relation(fields: [gun_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+  Users Users @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  @@id([gun_reference, id_user])
+  @@map("user_has_guns")
+}
+
+model UserHasMiscs {
+  misc_reference BigInt
+  id_user        Int
+
+  created_at DateTime @default(now())
+
+  Miscs Miscs @relation(fields: [misc_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+  Users Users @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  @@id([misc_reference, id_user])
+  @@map("user_has_miscs")
+}
+
+model Guilds {
+  id              Int    @id @default(autoincrement())
+  id_user         Int?   @unique
+  point_reference BigInt
+  reference       BigInt @unique
+
+  name                  String
+  damage_multiplier     Decimal @default(0.00) @db.Decimal(18, 8)
+  resistance_multiplier Int
+  asteroid_is_enemy     Boolean
+  hunting_time          Int
+  reputation            Int
+
+  type GuildType @default(STATIC)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  UsersOwner      Users?  @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  UsersAffiliated Users[] @relation("user_affiliated")
+  Points          Points  @relation(fields: [point_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_guilds")
+}
+
+model Peoples {
+  id          Int       @id @default(autoincrement())
+  id_user     Int       @unique
+  first_name  String?
+  last_name   String?
+  nationality String?
+  birthday    DateTime?
+  birthplace  String?
+  phone       String?
+  phone_code  String?
+  cellphone   String?
+  cell_code   String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Users Users @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_peoples")
+}
+
+model Permissions {
+  id                   Int     @id @default(autoincrement())
+  id_permission_indice Int
+  id_user              Int
+  enabled              Boolean
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  PermissionsIndices PermissionIndices @relation(fields: [id_permission_indice], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  Users              Users             @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_permissions")
+}
+
+model PermissionIndices {
+  id            Int             @id @default(autoincrement())
+  id_permission Int?
+  name          String
+  description   String
+  parameter     String
+  type          TypePermissions
+  standard      Boolean         @default(false)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  ChildOf          PermissionIndices?  @relation("parent_permission", fields: [id_permission], references: [id])
+  ParentPermission PermissionIndices[] @relation("parent_permission")
+
+  Permissions Permissions[]
+
+  @@map("tbl_permission_indices")
+}
+
+model SecurityCodes {
+  id      Int @id @default(autoincrement())
+  id_user Int
+
+  code            String             @unique
+  hash            String
+  date_expiration DateTime
+  status          StatusSecurityCode @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Users Users @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_security_codes")
+}
+
+model Accounts {
+  id      Int @id @default(autoincrement())
+  id_user Int
+
+  mac_address String
+  store_name  String @unique
+  status      Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Users Users @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_accounts")
+}
+
+model Maps {
+  id       Int @id @default(autoincrement())
+  id_point Int
+
+  name              String //"11698",
+  xpos              BigInt //8,
+  ypos              BigInt //27,
+  // point_name                      String//"None",
+  galaxy            BigInt @default(0) //0,
+  access_level_area BigInt @default(0) //6,
+  guild_area        BigInt @default(0) //2
+  status            Status @default(ACTIVE)
+
+  hasPoints          MapHasPoints[]
+  UserConfigurations UserConfigurations[]
+  Points             Points               @relation(fields: [id_point], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("tbl_maps")
+}
+
+model MapHasPoints {
+  id_map   Int
+  id_point Int
+
+  Maps   Maps   @relation(fields: [id_map], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  Points Points @relation(fields: [id_point], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@id([id_map, id_point])
+  @@map("tbl_map_has_points")
+}
+
+model Points {
+  id           Int    @id @default(autoincrement())
+  galaxy_index BigInt
+
+  name              String
+  reference         BigInt    @unique
+  xpos              BigInt
+  ypos              BigInt
+  access_level_area BigInt
+  ai_guild_area     BigInt
+  type              PointType
+  status            Status    @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  HasPoints          PointHasPoints[]     @relation("has_points")
+  RelatedPoints      PointHasPoints[]     @relation("has_related_points")
+  AsteroidhasMaps    AsteroidHasPoints[]
+  UserConfigurations UserConfigurations[]
+  // hasMaps                         MapHasPoints[]
+  // Maps                            Maps[]
+  Markets            Markets[]
+  Guilds             Guilds[]
+
+  Galaxies     Galaxies       @relation(fields: [galaxy_index], references: [index], onUpdate: Cascade, onDelete: Restrict)
+  Maps         Maps[]
+  MapHasPoints MapHasPoints[]
+
+  @@map("tbl_points")
+}
+
+model PointHasPoints {
+  point_reference         BigInt
+  related_point_reference BigInt
+
+  created_at DateTime @default(now())
+
+  Points        Points @relation("has_points", fields: [point_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+  RelatedPoints Points @relation("has_related_points", fields: [related_point_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@id([point_reference, related_point_reference])
+  @@map("point_has_points")
+}
+
+model Galaxies {
+  id Int @id @default(autoincrement())
+
+  index             BigInt @unique
+  name              String
+  guild_area        String
+  access_level_area String
+  size              Json
+  status            Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Points Points[]
+
+  @@map("tbl_galaxies")
+}
+
+model Guns {
+  id Int @id @default(autoincrement())
+
+  name           String
+  reference      BigInt  @unique
+  firing_sound   String
+  accuracy       BigInt
+  speed          BigInt
+  damage         BigInt
+  type           BigInt
+  blueprint      String
+  repair_per_hp  BigInt
+  level_required BigInt
+  total_hp       BigInt
+  cost_price     Decimal @default(0.00) @db.Decimal(18, 8)
+  money_type     BigInt
+  static_mesh    String
+  item_name      String
+  icon           String
+  description    String
+  status         Status  @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  UserHasGuns UserHasGuns[]
+
+  @@map("tbl_guns")
+}
+
+model Ships {
+  id Int @id @default(autoincrement())
+
+  reference      BigInt  @unique
+  name           String
+  size           Decimal @default(0.00) @db.Decimal(18, 8)
+  wings_size     BigInt
+  speed          BigInt
+  evasion        BigInt
+  cargo_space    BigInt
+  shield         BigInt
+  gun_slots      BigInt
+  missile_slots  BigInt
+  misc_slots     BigInt
+  ship_model     String
+  ship_class     String
+  radar_range    BigInt
+  repair_per_hp  Decimal @default(0.00) @db.Decimal(18, 8)
+  level_required BigInt
+  total_hp       BigInt
+  cost_price     Decimal @default(0.00) @db.Decimal(18, 8)
+  money_type     BigInt
+  static_mesh    String
+  item_name      String
+  icon           String
+  description    String
+
+  status Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  ShipSkins ShipSkins[]
+
+  @@map("tbl_ships")
+}
+
+model ShipSkins {
+  id             Int    @id @default(autoincrement())
+  reference_ship BigInt
+
+  reference          BigInt  @unique
+  name               String
+  ovveride_materials Json[]
+  class_filter       String
+  cost_price         Decimal @default(0.00) @db.Decimal(18, 8)
+  money_type         BigInt
+  static_mesh        String
+  item_name          String
+  icon               String
+  description        String
+
+  status Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Ships Ships @relation(fields: [reference_ship], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_ship_skins")
+}
+
+model Achievements {
+  id Int @id @default(autoincrement())
+
+  reference BigInt? @unique
+  name      String
+  detail    String
+  image     String
+  rule_type String
+  status    Status  @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  AchievementSymbols AchievementSymbols[]
+
+  @@map("tbl_achievements")
+}
+
+model AchievementSymbols {
+  id                    Int    @id @default(autoincrement())
+  achievement_reference BigInt
+
+  reference BigInt  @unique
+  name      String
+  detail    String
+  image     String
+  order     BigInt
+  premium   BigInt
+  quantity  BigInt
+  ship      BigInt?
+  status    Status  @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Achievements Achievements @relation(fields: [achievement_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_achievement_symbols")
+}
+
+model Miscs {
+  id Int @id @default(autoincrement())
+
+  reference      BigInt   @unique
+  name           String
+  module_type    MiscType
+  effect_value   Decimal  @default(0.00) @db.Decimal(18, 8)
+  module_level   BigInt
+  repair_per_hp  Decimal  @default(0.00) @db.Decimal(18, 8)
+  level_required BigInt
+  total_hp       BigInt
+  cost_price     Decimal  @default(0.00) @db.Decimal(18, 8)
+  money_type     BigInt
+  static_mesh    String
+  item_name      String
+  icon           String
+  description    String
+
+  status Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  UserHasMiscs UserHasMiscs[]
+
+  @@map("tbl_miscs")
+}
+
+model Decks {
+  id Int @id @default(autoincrement())
+
+  reference  BigInt
+  money_type Int
+  cost_price Decimal @default(0.00) @db.Decimal(18, 8)
+
+  status Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("tbl_decks")
+}
+
+model Minerals {
+  id Int @id @default(autoincrement())
+
+  reference BigInt @unique
+  name      String
+
+  status Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  AsteroidHasMinerals AsteroidHasMinerals[]
+  MarketHasMinerals   MarketHasMinerals[]
+
+  @@map("tbl_minerals")
+}
+
+model Markets {
+  id Int @id @default(autoincrement())
+
+  point_reference BigInt
+  name            String
+  update_time_min Int
+  update_time_max Int
+
+  status Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  MarketHasMinerals MarketHasMinerals[]
+  Points            Points              @relation(fields: [point_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_markets")
+}
+
+model MarketHasMinerals {
+  market_id          Int
+  minerals_reference BigInt
+
+  count_min  Int
+  count_max  Int
+  created_at DateTime @default(now())
+
+  Markets  Markets  @relation(fields: [market_id], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  Minerals Minerals @relation(fields: [minerals_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@id([market_id, minerals_reference])
+  @@map("market_has_minerals")
+}
+
+model Asteroids {
+  id Int @id @default(autoincrement())
+
+  reference         BigInt  @unique
+  name              String
+  jump_delay_min    Int
+  jump_delay_max    Int
+  respawn_delay_min Int
+  respawn_delay_max Int
+  full_hp_min       Int
+  full_hp_max       Int
+  experience_min    Int
+  experience_max    Int
+  money_min         Decimal @default(0.00) @db.Decimal(18, 8)
+  money_max         Decimal @default(0.00) @db.Decimal(18, 8)
+  visual_type       Int
+  max               Int
+  loot_boxes        Json[]
+
+  status Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  AsteroidHasPoints   AsteroidHasPoints[]
+  AsteroidHasMinerals AsteroidHasMinerals[]
+
+  @@map("tbl_asteroid")
+}
+
+model AsteroidHasPoints {
+  point_reference    BigInt
+  asteroid_reference BigInt
+
+  created_at DateTime @default(now())
+
+  Points    Points    @relation(fields: [point_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+  Asteroids Asteroids @relation(fields: [asteroid_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@id([point_reference, asteroid_reference])
+  @@map("asteroid_has_points")
+}
+
+model AsteroidHasMinerals {
+  asteroid_reference BigInt
+  minerals_reference BigInt
+
+  count_min  Int
+  count_max  Int
+  created_at DateTime @default(now())
+
+  Asteroids Asteroids @relation(fields: [asteroid_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+  Minerals  Minerals  @relation(fields: [minerals_reference], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@id([asteroid_reference, minerals_reference])
+  @@map("asteroid_has_minerals")
+}
+
+model PlayerResearches {
+  id                             Int    @id @default(autoincrement())
+  id_user                        Int
+  reference_player_reserach_type BigInt
+
+  time_end   DateTime
+  increase   Int
+  level      Int
+  with_boots Boolean               @default(false)
+  status     StatusPlayerResearchs @default(IN_PROGESS)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Users               Users               @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  PlayerResearchTypes PlayerResearchTypes @relation(fields: [reference_player_reserach_type], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_player_researches")
+}
+
+model PlayerResearchTypes {
+  id Int @id @default(autoincrement())
+
+  reference BigInt @unique
+
+  name           String
+  description    String
+  upgrade_time   Int
+  time_boosted   Decimal @default(0.00) @db.Decimal(18, 8)
+  boost_percents Int
+  cost           Decimal @default(0.00) @db.Decimal(18, 8)
+  boost_cost     Decimal @default(0.00) @db.Decimal(18, 8)
+  increase       Int     @default(0)
+
+  status Status @default(ACTIVE)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  PlayerResearches PlayerResearches[]
+
+  @@map("tbl_player_research_types")
+}
+
+model PlanetResearchTypes {
+  id        Int    @id @default(autoincrement())
+  reference BigInt @unique
+
+  name        String
+  icon        String
+  description String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  PlanetResearchLevels PlanetResearchLevels[]
+  PlanetResearches     PlanetResearches[]
+  PlanetUpgrade        PlanetUpgrade[]
+
+  @@map("tbl_planet_research_types")
+}
+
+model PlanetResearchLevels {
+  id                        Int    @id @default(autoincrement())
+  reference_player_research BigInt
+
+  short_description String
+  description       String
+  upgrade_time      Int
+  upgrade_cost      Decimal @default(0.00) @db.Decimal(18, 8)
+  boost_cost        Decimal @default(0.00) @db.Decimal(18, 8)
+  boost_percents    Int
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  PlanetResearchTypes PlanetResearchTypes @relation(fields: [reference_player_research], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_planet_research_levels")
+}
+
+model PlanetResearches {
+  id                             Int    @id @default(autoincrement())
+  id_planet                      Int
+  reference_planet_reserach_type BigInt
+
+  time_end   DateTime
+  increase   Int
+  level      Int
+  with_boots Boolean               @default(false)
+  status     StatusPlayerResearchs @default(IN_PROGESS)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Planets             Planets             @relation(fields: [id_planet], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  PlanetResearchTypes PlanetResearchTypes @relation(fields: [reference_planet_reserach_type], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_planet_researches")
+}
+
+model PlanetUpgrade {
+  id                             Int    @id @default(autoincrement())
+  id_planet                      Int
+  reference_planet_reserach_type BigInt
+
+  time_end   DateTime
+  increase   Int
+  level      Int
+  with_boots Boolean               @default(false)
+  status     StatusPlayerResearchs @default(IN_PROGESS)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  Planets             Planets             @relation(fields: [id_planet], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  PlanetResearchTypes PlanetResearchTypes @relation(fields: [reference_planet_reserach_type], references: [reference], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_planet_upgrade")
+}
+
+model Planets {
+  id      Int  @id @default(autoincrement())
+  id_user Int?
+
+  name                    String
+  population              String
+  coruption               Decimal  @default(0.00) @db.Decimal(18, 8)
+  coruption_growing_index Decimal  @default(0.00) @db.Decimal(18, 8)
+  economy                 Decimal  @default(0.00) @db.Decimal(18, 8)
+  guild_tax               Decimal  @default(0.00) @db.Decimal(18, 8)
+  max_guild_tax           Decimal  @default(0.00) @db.Decimal(18, 8)
+  remaining_income_time   DateTime
+  income_frequency        Int
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  PlanetResearches PlanetResearches[]
+  PlanetUpgrade    PlanetUpgrade[]
+
+  Users Users? @relation(fields: [id_user], references: [id], onUpdate: Cascade, onDelete: Restrict)
+
+  @@map("tbl_planets")
+}
+
+enum StatusPlayerResearchs {
+  IN_PROGESS
+  CONCLUDED
+  CANCELED
+}
+
+enum GuildType {
+  STATIC
+  BOTS
+}
+
+enum MiscType {
+  SHIELD
+  HULL
+  SPEED
+  CARGO
+}
+
+enum PointType {
+  POINT
+  PLANET
+  STATION
+  GATE
+}
+
+enum StatusSecurityCode {
+  ACTIVE
+  CHECKED
+  CANCELED
+}
+
+enum Roles {
+  MANAGER
+  SUPPORT
+  EMPLOYEE
+  ADMIN
+  PLAYER
+  BOTS
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum TypePermissions {
+  MENU
+  PAGE
+  SUBMENU
+  FUNC
+}

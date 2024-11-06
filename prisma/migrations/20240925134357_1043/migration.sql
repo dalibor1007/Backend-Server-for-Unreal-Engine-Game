@@ -1,0 +1,32 @@
+-- CreateTable
+CREATE TABLE "tbl_ships" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "size" TEXT NOT NULL,
+    "wings_size" TEXT NOT NULL,
+    "speed" TEXT NOT NULL,
+    "evasion" TEXT NOT NULL,
+    "cargo_space" TEXT NOT NULL,
+    "shield" TEXT NOT NULL,
+    "gun_slots" TEXT NOT NULL,
+    "missile_slots" TEXT NOT NULL,
+    "misc_slots" TEXT NOT NULL,
+    "ship_model" TEXT NOT NULL,
+    "ship_class" TEXT NOT NULL,
+    "radar_range" TEXT NOT NULL,
+    "repair_per_hp" TEXT NOT NULL,
+    "level_required" TEXT NOT NULL,
+    "total_hp" TEXT NOT NULL,
+    "cost_price" TEXT NOT NULL,
+    "money_type" TEXT NOT NULL,
+    "static_mesh" TEXT NOT NULL,
+    "reference" TEXT NOT NULL,
+    "item_name" TEXT NOT NULL,
+    "icon" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "status" "Status" NOT NULL DEFAULT 'ACTIVE',
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "tbl_ships_pkey" PRIMARY KEY ("id")
+);

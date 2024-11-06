@@ -1,0 +1,135 @@
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset your password</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  body {
+    font-family: 'Open Sans', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f7f7f7;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .email-container {
+    background: #fff;
+    width: 100%;
+    max-width: 600px;
+    margin: 20px;
+    padding: 40px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    text-align: center;
+  }
+  .logo {
+    font-size: 36px;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  .instructions {
+    margin: 20px 0;
+    color: #333;
+    line-height: 1.6;
+  }
+  .button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0056b3;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 4px;
+    margin: 20px 0;
+  }
+  .questions {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+  .social-icons {
+    display: flex;
+    justify-content: center;
+    list-style-type: none;
+    padding: 0;
+    margin: 20px 0;
+  }
+  .social-icons li {
+    margin: 0 10px;
+  }
+  .social-icons a {
+    text-decoration: none;
+    color: inherit;
+  }
+  .footer p{
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 25px;
+  }
+  .unsubscribe {
+    text-decoration: underline;
+    color: #666;
+    font-size: 0.8rem;
+  }
+  .code{
+    border-collapse: collapse;
+    padding: 15px 30px 15px 30px;
+    background-color: #000000;
+    border-radius: 20px;
+    color: #FFFFFF;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  p{
+    color: #1e6980;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 18px;
+  }
+  a.btn-confirm{
+    background-color: #000000;
+    color: #ffffff;
+    padding: 20px;
+    font-size: 22px;
+    font-weight: 400;
+    text-decoration: none;
+  }
+  hr{
+    margin-top: 50px;
+    margin-bottom: 0px;
+  }
+</style>
+</head>
+<body>
+
+<div class="email-container">
+  <div class="logo" style="background-color: #1e6980"><img src="https://cdn-dme.s3.amazonaws.com/dmelogo_flat.jpg" alt="image logo" style=""></div>
+  <h1 class="instructions">Welcome to Diaspora!</h1>
+  <p>Hello, <b>{{name}}</b>!</p>
+  <p>Click the button below to confirm your email</p>
+  <a href="{{link}}" target="_blank" class="btn-confirm">Confirm your account</a>
+<br>
+<hr>
+  <div class="footer">
+    <p>If you believe your account has been compromised, please contact us immediately via live chat or email
+    {{support_email}} using your registered email address.or you can click here to Ban this account</p>
+    <p><b>&copy{{copy}}</b></p>
+    <a href="#" class="unsubscribe">Unsubscribe</a>
+  </div>
+</div>
+
+</body>
+</html>
+
+
+
+
+
+
+
